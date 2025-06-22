@@ -41,7 +41,6 @@ app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAntiforgery();
 app.UseResponseCompression();
-app.MapHub<MovieHub>("/moviehub");
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
