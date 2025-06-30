@@ -1,15 +1,20 @@
-﻿// Services/MovieService.cs
+// Services/MovieService.cs
 using Dapper;
+using Microsoft.AspNetCore.SignalR;
 using System.Data;
 using System.Data.SqlClient;
+using TestBlazor.Hubs;
+using TestBlazor.Models;
 
 public class MovieService
 {
     private readonly string _connectionString;
+    private readonly IHubContext<MovieHub> _hubContext;
 
-    public MovieService(IConfiguration config, ILogger<MovieService> logger)
+    public MovieService(IConfiguration config, ILogger<MovieService> logger, IHubContext<MovieHub> hubContext)
     {
         _connectionString = config.GetConnectionString("MovieDb");
+        _hubContext = hubContext;
     }
 
     public async Task<IEnumerable<Movie>> GetAllMovies()
@@ -33,7 +38,10 @@ public class MovieService
             VALUES (@Title, @Genre, @ReleaseDate, @BoxOfficeSales);
             SELECT CAST(SCOPE_IDENTITY() as int)";
 
-        return await db.ExecuteScalarAsync<int>(sql, movie);
+        var id = await db.ExecuteScalarAsync<int>(sql, movie);
+        movie.Id = id;
+        await _hubContext.Clients.All.MovieChanged(movie);
+        return id;
     }
 
     public async Task<bool> UpdateMovie(Movie movie)
@@ -48,7 +56,12 @@ public class MovieService
             WHERE Id = @Id";
 
         var affectedRows = await db.ExecuteAsync(sql, movie);
-        return affectedRows == 1;
+        if (affectedRows == 1)
+        {
+            await _hubContext.Clients.All.MovieChanged(movie);
+            return true;
+        }
+        return false;
     }
 
     public async Task<bool> DeleteMovie(int id)
@@ -56,6 +69,11 @@ public class MovieService
         using IDbConnection db = new SqlConnection(_connectionString);
         var affectedRows = await db.ExecuteAsync(
             "DELETE FROM Movies WHERE Id = @Id", new { Id = id });
-        return affectedRows == 1;
+        if (affectedRows == 1)
+        {
+            await _hubContext.Clients.All.MovieChanged(new Movie { Id = id });
+            return true;
+        }
+        return false;
     }
 }
