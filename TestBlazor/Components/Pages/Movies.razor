@@ -1,7 +1,10 @@
-﻿@page "/movies"
+@page "/movies"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.SignalR.Client
+@using TestBlazor.Models
 @inject MovieService MovieService
 @inject NavigationManager Navigation
+@implements IAsyncDisposable
 
 <h3>Movies</h3>
 
@@ -139,17 +142,24 @@ else
     private bool showDeleteConfirmation;
     private int movieToDeleteId;
     private string movieToDeleteTitle;
-    private System.Threading.Timer refreshTimer;
+    private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadMovies();
 
-        refreshTimer = new System.Threading.Timer(async _ =>
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl(Navigation.ToAbsoluteUri("/moviehub"))
+            .WithAutomaticReconnect()
+            .Build();
+
+        hubConnection.On("ReceiveMovieUpdate", async () =>
         {
             await LoadMovies();
             await InvokeAsync(StateHasChanged);
-        }, null, TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(30));
+        });
+
+        await hubConnection.StartAsync();
     }
 
     private async Task LoadMovies()
@@ -210,8 +220,11 @@ else
         showEditDialog = false;
     }
 
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        refreshTimer?.Dispose();
+        if (hubConnection is not null)
+        {
+            await hubConnection.DisposeAsync();
+        }
     }
 }

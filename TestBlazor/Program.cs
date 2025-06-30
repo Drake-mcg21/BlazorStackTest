@@ -17,12 +17,7 @@ builder.Services.AddResponseCompression(opts =>
         new[] { "application/octet-stream" });
 });
 // Add your MovieService with proper database configuration
-builder.Services.AddScoped<MovieService>(provider =>
-{
-    var config = provider.GetRequiredService<IConfiguration>();
-    var logger = provider.GetRequiredService<ILogger<MovieService>>();
-    return new MovieService(config, logger);
-});
+builder.Services.AddScoped<MovieService>();
 
 // If using Dapper, add IDbConnection factory
 builder.Services.AddTransient<IDbConnection>(_ =>
@@ -44,5 +39,7 @@ app.UseResponseCompression();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapHub<TestBlazor.Hubs.MovieHub>("/moviehub");
 
 app.Run();
