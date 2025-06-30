@@ -6,6 +6,10 @@
 @inject NavigationManager Navigation
 @implements IAsyncDisposable
 
+<div class="alert alert-info mb-3">
+    Connection: @connectionStatus
+</div>
+
 <h3>Movies</h3>
 
 @if (moviesList == null)
@@ -143,6 +147,7 @@ else
     private int movieToDeleteId;
     private string movieToDeleteTitle;
     private HubConnection? hubConnection;
+    private string connectionStatus = "Connecting";
 
     protected override async Task OnInitializedAsync()
     {
@@ -153,6 +158,24 @@ else
             .WithAutomaticReconnect()
             .Build();
 
+        hubConnection.Reconnecting += error =>
+        {
+            connectionStatus = "Reconnecting";
+            return InvokeAsync(StateHasChanged);
+        };
+
+        hubConnection.Reconnected += connectionId =>
+        {
+            connectionStatus = "Connected";
+            return InvokeAsync(StateHasChanged);
+        };
+
+        hubConnection.Closed += error =>
+        {
+            connectionStatus = "Disconnected";
+            return InvokeAsync(StateHasChanged);
+        };
+
         hubConnection.On("ReceiveMovieUpdate", async () =>
         {
             await LoadMovies();
@@ -160,6 +183,7 @@ else
         });
 
         await hubConnection.StartAsync();
+        connectionStatus = "Connected";
     }
 
     private async Task LoadMovies()
