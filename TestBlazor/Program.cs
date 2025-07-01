@@ -2,7 +2,7 @@ using Dapper; // If using Dapper
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore; // If using EF Core
 using System.Data;
-using System.Data.SqlClient; // For SQL connection
+using Microsoft.Data.SqlClient; // For SQL connection
 using TestBlazor.Components;
 
 var builder = WebApplication.CreateBuilder(args);

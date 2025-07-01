@@ -2,7 +2,7 @@
 using Dapper;
 using Microsoft.AspNetCore.SignalR;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using TestBlazor.Hubs;
 using TestBlazor.Models;
 
@@ -13,7 +13,8 @@ public class MovieService
 
     public MovieService(IConfiguration config, ILogger<MovieService> logger, IHubContext<MovieHub> hubContext)
     {
-        _connectionString = config.GetConnectionString("MovieDb");
+        
+        _connectionString = config.GetConnectionString("MovieDb") ?? throw new ArgumentNullException(nameof(config), "Connection string 'MovieDb' is null.");
         _hubContext = hubContext;
     }
 
@@ -26,8 +27,7 @@ public class MovieService
     public async Task<Movie> GetMovieById(int id)
     {
         using IDbConnection db = new SqlConnection(_connectionString);
-        return await db.QueryFirstOrDefaultAsync<Movie>(
-            "SELECT * FROM Movies WHERE Id = @Id", new { Id = id });
+        return await db.QueryFirstOrDefaultAsync<Movie>("SELECT * FROM Movies WHERE Id = @Id", new { Id = id });
     }
 
     public async Task<int> CreateMovie(Movie movie)
