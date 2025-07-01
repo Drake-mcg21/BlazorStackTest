@@ -9,11 +9,11 @@ namespace TestBlazor.Models
 
         [Required(ErrorMessage = "Title is required")]
         [StringLength(100, ErrorMessage = "Title cannot exceed 100 characters")]
-        public string Title { get; set; }
+        public string ?Title { get; set; }
 
         [Required(ErrorMessage = "Genre is required")]
         [StringLength(50, ErrorMessage = "Genre cannot exceed 50 characters")]
-        public string Genre { get; set; }
+        public string? Genre { get; set; }
 
         [Required(ErrorMessage = "Release date is required")]
         public DateTime ReleaseDate { get; set; }

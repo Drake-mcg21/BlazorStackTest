@@ -42,7 +42,8 @@ else
                                     class="btn btn-sm btn-warning">
                                 <i class="bi bi-pencil"></i> Edit
                             </button>
-                            <button @onclick="@(() => ConfirmDelete(movie.Id, movie.Title))"
+                            <button @onclick="@(() => ConfirmDelete(movie.Id,movie.Title))"
+                                    
                                     class="btn btn-sm btn-danger">
                                 <i class="bi bi-trash"></i> Delete
                             </button>
@@ -136,12 +137,12 @@ else
 }
 
 @code {
-    private List<Movie> moviesList;
+    private List<Movie> ?moviesList;
     private Movie currentMovie = new Movie();
     private bool showEditDialog;
     private bool showDeleteConfirmation;
     private int movieToDeleteId;
-    private string movieToDeleteTitle;
+    private string ?movieToDeleteTitle;
     private HubConnection? hubConnection;
 
     protected override async Task OnInitializedAsync()
@@ -194,8 +195,12 @@ else
         await LoadMovies();
     }
 
-    private void ConfirmDelete(int id, string title)
+    private void ConfirmDelete(int id, string? title)
     {
+        if (id <= 0 || string.IsNullOrEmpty(title))
+        {
+            return; // Invalid parameters, do nothing
+        }
         movieToDeleteId = id;
         movieToDeleteTitle = title;
         showDeleteConfirmation = true;
